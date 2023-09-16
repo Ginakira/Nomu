@@ -12,12 +12,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-set(PROJECT_SOURCES
+set(RESOURCE_FILES
+        resources/resources.qrc
         app_win32.rc
+)
+
+set(PROJECT_SOURCES
+        ${RESOURCE_FILES}
         main.cpp
         src/main_window.cc
         src/main_window.h
         src/ui/main_window.ui
+        src/remind_dialog.cc
+        src/remind_dialog.h
+        src/ui/remind_dialog.ui
         version.h
 )
 

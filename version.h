@@ -2,12 +2,22 @@
 // Created by Ginakira on 2023/9/15.
 //
 
-#ifndef NOMU__VERSION_H_
-#define NOMU__VERSION_H_
+#ifndef NOMU_VERSION_H_
+#define NOMU_VERSION_H_
 
-#define MAJOR_VERSION 1
-#define MINOR_VERSION 0
-#define BUILD_VERSION 20230917
-#define APPLICATION_NAME "Nomu"
+#include <QVersionNumber>
 
-#endif  // NOMU__VERSION_H_
+namespace Nomu {
+
+constexpr int MAJOR_VERSION = 1;
+constexpr int MINOR_VERSION = 0;
+constexpr int BUILD_VERSION = 20230917;
+constexpr auto APPLICATION_NAME = "Nomu";
+
+inline QVersionNumber GetApplicationVersion() {
+  QVersionNumber version(MAJOR_VERSION, MINOR_VERSION);
+  return version;
+}
+
+}// namespace Nomu
+#endif// NOMU_VERSION_H_
