@@ -26,6 +26,8 @@ MainWindow::MainWindow(QWidget *parent)
           &MainWindow::CountdownReset);
   connect(ui_->change_image_button, &QPushButton::clicked, this,
           &MainWindow::ChangeRemindImage);
+  connect(ui_->switch_timer_button, &QPushButton::clicked, this,
+          &MainWindow::SwitchTimer);
 
   tray_icon_->show();
 }
@@ -95,20 +97,22 @@ void MainWindow::SetImageLabel() {
 void MainWindow::CreateTimer() {
   CountdownReset();
   timer_ = new QTimer;
-  timer_->start(1000 * 1);
-  connect(timer_, &QTimer::timeout, [this]() {
-    if (cur_countdown_sec_ > 0) {
-      ui_->timer_lcd->display(cur_countdown_sec_--);
-    } else {
-      auto remind_dialog =
-          new RemindDialog(this, reminder_image_, cur_drink_times_);
-      connect(remind_dialog, &RemindDialog::DrinkConfirmed, this,
-              &MainWindow::DrinkRecorded);
-      remind_dialog->exec();
-      delete remind_dialog;
-      CountdownReset();
-    }
-  });
+  StartTimer();
+  connect(timer_, &QTimer::timeout, this, &MainWindow::TimerTickHandle);
+}
+
+void MainWindow::TimerTickHandle() {
+  if (cur_countdown_sec_ > 0) {
+    ui_->timer_lcd->display(cur_countdown_sec_--);
+  } else {
+    auto remind_dialog =
+        new RemindDialog(this, reminder_image_, cur_drink_times_);
+    connect(remind_dialog, &RemindDialog::DrinkConfirmed, this,
+            &MainWindow::DrinkRecorded);
+    remind_dialog->exec();
+    delete remind_dialog;
+    CountdownReset();
+  }
 }
 
 void MainWindow::DrinkRecorded() {
@@ -122,4 +126,27 @@ void MainWindow::CountdownReset() {
 }
 void MainWindow::ChangeRemindImage() {
   QMessageBox::warning(this, "在做了", "此功能需购买DLC");
+}
+
+void MainWindow::SwitchTimer() {
+  if (!timer_) { return; }
+  if (timer_->isActive()) {
+    StopTimer();
+    ui_->switch_timer_button->setText("恢复计时");
+  } else {
+    StartTimer();
+    ui_->switch_timer_button->setText("暂停计时");
+  }
+}
+
+void MainWindow::StartTimer() {
+  if (!timer_) { return; }
+  timer_->start(kTimerIntervalMs);
+  qDebug() << "Timer active: " << timer_->isActive();
+}
+
+void MainWindow::StopTimer() {
+  if (!timer_) { return; }
+  timer_->stop();
+  qDebug() << "Timer active: " << timer_->isActive();
 }

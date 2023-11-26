@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QSystemTrayIcon>
 #include <QTimer>
+#include <atomic>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,10 +29,16 @@ class MainWindow : public QMainWindow {
   void ChangeRemindImage();
 
  private:
+  static constexpr int kTimerIntervalMs = 1000 * 1;
   void CreateTrayIcon();
   void CreateActions();
   void SetImageLabel();
+
   void CreateTimer();
+  void StartTimer();
+  void StopTimer();
+  void TimerTickHandle();
+  void SwitchTimer();
 
   QAction *label_action_{};
   QAction *minimize_action_{};
