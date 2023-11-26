@@ -10,8 +10,8 @@
 namespace Nomu {
 
 constexpr int MAJOR_VERSION = 1;
-constexpr int MINOR_VERSION = 1;
-constexpr int BUILD_VERSION = 20230919;
+constexpr int MINOR_VERSION = 2;
+constexpr int BUILD_VERSION = 20231127;
 constexpr auto APPLICATION_NAME = "Nomu";
 
 inline QVersionNumber GetApplicationVersion() {

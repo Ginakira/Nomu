@@ -1,17 +1,21 @@
 #include "main_window.h"
 
 #include <QCloseEvent>
-#include <QMessageBox>
-#include <QVersionNumber>
+#include <QFileDialog>
 
 #include "../version.h"
 #include "remind_dialog.h"
+#include "setting_flags.h"
 #include "ui/ui_main_window.h"
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QSettings &settings, QWidget *parent)
     : QMainWindow(parent),
-      ui_(new Ui::MainWindow) {
+      ui_(new Ui::MainWindow),
+      settings_(settings) {
   ui_->setupUi(this);
+
+  LoadSettings();
+  RestoreInfoToUI();
 
   CreateActions();
   CreateTrayIcon();
@@ -88,7 +92,7 @@ void MainWindow::IconActivated(QSystemTrayIcon::ActivationReason reason) {
 }
 
 void MainWindow::SetImageLabel() {
-  reminder_image_ = new QPixmap(":/icon/nomu.jpg");
+  reminder_image_ = new QPixmap(reminder_image_path_);
   int w = ui_->image_label->width();
   ui_->image_label->setPixmap(
       reminder_image_->scaledToWidth(w, Qt::SmoothTransformation));
@@ -106,7 +110,7 @@ void MainWindow::TimerTickHandle() {
     ui_->timer_lcd->display(cur_countdown_sec_--);
   } else {
     auto remind_dialog =
-        new RemindDialog(this, reminder_image_, cur_drink_times_);
+        new RemindDialog(this, reminder_image_, total_drink_times_);
     connect(remind_dialog, &RemindDialog::DrinkConfirmed, this,
             &MainWindow::DrinkRecorded);
     remind_dialog->exec();
@@ -116,16 +120,26 @@ void MainWindow::TimerTickHandle() {
 }
 
 void MainWindow::DrinkRecorded() {
-  qDebug() << "Drink record, cur: " << cur_drink_times_;
-  ++cur_drink_times_;
-  ui_->drink_count_lcd->display(cur_drink_times_);
+  qDebug() << "Drink record, cur: " << total_drink_times_;
+  ++total_drink_times_;
+  ui_->drink_count_lcd->display(total_drink_times_);
+  CountdownReset();
+  SaveSettings();
 }
 
 void MainWindow::CountdownReset() {
-  cur_countdown_sec_ = ui_->interval_min_spin_box->value() * 60;
+  remind_interval_min_ = ui_->interval_min_spin_box->value();
+  SaveSettings();
+  cur_countdown_sec_ = remind_interval_min_ * 60;
 }
 void MainWindow::ChangeRemindImage() {
-  QMessageBox::warning(this, "在做了", "此功能需购买DLC");
+  QString image_filename = QFileDialog::getOpenFileName(
+      this, "选择提醒图片", QDir::homePath(),
+      "Images (*.png *.xpm *.jpg *.jpeg *.bmp);;All files (*.*)");
+  if (image_filename.isEmpty()) { return; }
+  reminder_image_path_ = image_filename;
+  SetImageLabel();
+  SaveSettings();
 }
 
 void MainWindow::SwitchTimer() {
@@ -149,4 +163,30 @@ void MainWindow::StopTimer() {
   if (!timer_) { return; }
   timer_->stop();
   qDebug() << "Timer active: " << timer_->isActive();
+}
+
+void MainWindow::LoadSettings() {
+  total_drink_times_ = settings_
+                           .value(NomuSettingFlags::TotalDrinkTimes,
+                                  NomuSettingFlags::DefaultTotalDrinkTimes)
+                           .toInt();
+  remind_interval_min_ = settings_
+                             .value(NomuSettingFlags::RemindIntervalMin,
+                                    NomuSettingFlags::DefaultRemindIntervalMin)
+                             .toInt();
+  reminder_image_path_ = settings_
+                             .value(NomuSettingFlags::ReminderImagePath,
+                                    NomuSettingFlags::DefaultReminderImagePath)
+                             .toString();
+}
+
+void MainWindow::SaveSettings() {
+  settings_.setValue(NomuSettingFlags::TotalDrinkTimes, total_drink_times_);
+  settings_.setValue(NomuSettingFlags::RemindIntervalMin, remind_interval_min_);
+  settings_.setValue(NomuSettingFlags::ReminderImagePath, reminder_image_path_);
+}
+
+void MainWindow::RestoreInfoToUI() {
+  ui_->drink_count_lcd->display(total_drink_times_);
+  ui_->interval_min_spin_box->setValue(remind_interval_min_);
 }

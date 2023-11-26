@@ -2,9 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSettings>
 #include <QSystemTrayIcon>
 #include <QTimer>
-#include <atomic>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -16,7 +16,7 @@ class MainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  explicit MainWindow(QWidget *parent = nullptr);
+  explicit MainWindow(QSettings &settings, QWidget *parent = nullptr);
   ~MainWindow() override;
 
  protected:
@@ -39,6 +39,9 @@ class MainWindow : public QMainWindow {
   void StopTimer();
   void TimerTickHandle();
   void SwitchTimer();
+  void LoadSettings();
+  void SaveSettings();
+  void RestoreInfoToUI();
 
   QAction *label_action_{};
   QAction *minimize_action_{};
@@ -47,11 +50,15 @@ class MainWindow : public QMainWindow {
 
   QTimer *timer_{};
   int cur_countdown_sec_{};
-  int cur_drink_times_{};
 
   Ui::MainWindow *ui_;
   QPixmap *reminder_image_{};
   QSystemTrayIcon *tray_icon_{};
   QMenu *tray_icon_menu_{};
+
+  QSettings &settings_;
+  int total_drink_times_{};
+  int remind_interval_min_{};
+  QString reminder_image_path_{};
 };
 #endif// MAINWINDOW_H

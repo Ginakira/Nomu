@@ -27,6 +27,7 @@ set(PROJECT_SOURCES
         src/remind_dialog.h
         src/ui/remind_dialog.ui
         version.h
+        src/setting_flags.h
 )
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
